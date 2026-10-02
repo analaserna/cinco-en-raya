@@ -9,6 +9,7 @@ from cincoenraya.errors import GameOverError, InvalidMoveError, OccupiedCellErro
 
 DEFAULT_SIZE = 15
 WIN_LENGTH = 5
+DIRECTIONS = ((0, 1), (1, 0), (1, 1), (1, -1))
 
 
 class Player(Enum):
@@ -81,6 +82,9 @@ class GameState:
     def play(self, move: Move) -> None:
         """Aplica el movimiento del jugador actual y pasa el turno.
 
+        Si el movimiento completa una línea ganadora, la partida termina
+        y el turno no cambia.
+
         Raises:
             InvalidMoveError: si el argumento no es un Move.
             GameOverError: si la partida ya ha terminado.
@@ -99,8 +103,11 @@ class GameState:
         self._board[move.row][move.col] = self.current_player
         self.move_count += 1
         self.last_move = move
-        # TODO: comprobar victoria tras el movimiento.
-        self.current_player = self.current_player.opponent()
+
+        if self._is_winning_move(move):
+            self.winner = self.current_player
+        else:
+            self.current_player = self.current_player.opponent()
 
     def copy(self) -> GameState:
         """Devuelve una copia independiente del estado."""
@@ -111,6 +118,28 @@ class GameState:
         clone.move_count = self.move_count
         clone.last_move = self.last_move
         return clone
+
+    def _count_direction(self, move: Move, d_row: int, d_col: int) -> int:
+        """Cuenta fichas consecutivas del mismo jugador desde move en una dirección.
+
+        No incluye la casilla de move.
+        """
+        player = self._board[move.row][move.col]
+        count = 0
+        row, col = move.row + d_row, move.col + d_col
+        while 0 <= row < self.size and 0 <= col < self.size and self._board[row][col] is player:
+            count += 1
+            row += d_row
+            col += d_col
+        return count
+
+    def _is_winning_move(self, move: Move) -> bool:
+        """Indica si la ficha colocada en move forma una línea de WIN_LENGTH o más."""
+        for d_row, d_col in DIRECTIONS:
+            line = 1 + self._count_direction(move, d_row, d_col) + self._count_direction(move, -d_row, -d_col)
+            if line >= WIN_LENGTH:
+                return True
+        return False
 
     def __str__(self) -> str:
         symbols = {None: ".", Player.BLACK: "X", Player.WHITE: "O"}
