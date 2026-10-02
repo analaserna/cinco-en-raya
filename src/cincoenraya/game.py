@@ -1,4 +1,13 @@
-"""Lógica del juego cinco en raya."""
+"""Lógica del juego cinco en raya.
+
+Reglas:
+    - Tablero cuadrado de 15x15 por defecto (mínimo 5x5).
+    - Juegan negras (X) y blancas (O); empiezan siempre las negras.
+    - En cada turno, el jugador coloca una ficha en una casilla vacía.
+    - Gana quien forma una línea de cinco o más fichas propias en
+      horizontal, vertical o diagonal.
+    - Si el tablero se llena sin ganador, la partida termina en empate.
+"""
 
 from __future__ import annotations
 
