@@ -8,11 +8,29 @@ Proyecto de la asignatura Inteligencia Artificial (3º MAT, CUNEF Universidad, 2
 
 ## Reglas
 
+- Tablero de 15x15 (configurable, mínimo 5x5).
+- Juegan negras (X) y blancas (O); empiezan siempre las negras.
+- En cada turno, el jugador coloca una ficha en una casilla vacía.
+- Gana quien consigue cinco o más fichas seguidas en horizontal, vertical o diagonal.
+- Si el tablero se llena sin ganador, la partida termina en empate.
 
-- Juegan dos jugadores por turnos: negras empiezan.
-- Gana quien consigue cinco fichas seguidas / cinco o más en horizontal, vertical o diagonal.
-- Si el tablero se llena sin ganador, la partida acaba en empate.
+## Uso desde código
 
+```python
+from cincoenraya import GameState, Move
+
+state = GameState()
+state.play(Move(7, 7))  # negras
+state.play(Move(7, 8))  # blancas
+print(state)
+print(state.is_over(), state.winner)
+```
+
+Partida completa entre dos jugadores aleatorios:
+
+```bash
+python examples/partida_aleatoria.py
+```
 ## Instalación
 
 Requiere Python 3.10 o superior.
