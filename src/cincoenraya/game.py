@@ -62,6 +62,10 @@ class GameState:
         """Indica si la partida ha terminado por victoria o por empate."""
         return self.winner is not None or self.is_full()
 
+    def is_draw(self) -> bool:
+        """Indica si la partida ha terminado en empate."""
+        return self.winner is None and self.is_full()    
+
     def is_legal(self, move: Move) -> bool:
         """Indica si el movimiento se puede jugar en el estado actual."""
         if self.is_over() or not self.in_bounds(move):
