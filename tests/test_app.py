@@ -79,3 +79,25 @@ def test_si_el_bot_falla_gana_el_humano():
     assert at.session_state["game"].winner is Player.BLACK
     assert "Falla" in at.session_state["forfeit"]
     assert not at.exception
+
+def test_se_puede_elegir_el_bot_rival():
+    at = iniciar_app()
+    at.selectbox(key="opt_bot").select("Aleatorio").run()
+    assert at.session_state["bot"].name == "Aleatorio"
+    assert at.session_state["game"].move_count == 0
+
+
+def test_jugando_con_blancas_empieza_el_bot():
+    at = iniciar_app()
+    at.radio(key="opt_color").set_value("Blancas (empieza el bot)").run()
+    game = at.session_state["game"]
+    assert at.session_state["human"] is Player.WHITE
+    assert game.move_count == 1
+    assert game.current_player is Player.WHITE
+
+
+def test_cambiar_una_opcion_reinicia_la_partida():
+    at = iniciar_app()
+    at.button(key="cell-7-7").click().run()
+    at.selectbox(key="opt_bot").select("Aleatorio").run()
+    assert at.session_state["game"].move_count == 0

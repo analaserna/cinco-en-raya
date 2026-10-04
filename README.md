@@ -31,6 +31,19 @@ Partida completa entre dos jugadores aleatorios:
 ```bash
 python examples/partida_aleatoria.py
 ```
+
+## Jugar en la web
+
+La interfaz web está publicada en: https://NOMBRE.streamlit.app
+
+Se juega contra uno de los bots del proyecto. En "Opciones de la partida" se elige el bot rival y el color; las negras mueven siempre primero. Cualquier bot nuevo añadido a cincoenraya/bots/ aparece automáticamente en la lista.
+
+Para ejecutarla en local:
+
+bash
+pip install -e ".[web]"
+streamlit run app/streamlit_app.py
+
 ## Instalación
 
 Requiere Python 3.10 o superior.
@@ -53,16 +66,20 @@ pytest
 
 ```
 cinco-en-raya/
-├── src/cincoenraya/   # Lógica del juego
+├── app/               # Interfaz web (Streamlit)
+├── examples/          # Ejemplos de uso desde código
+├── src/cincoenraya/   # Lógica del juego, API de bots y motor de partidas
+│   └── bots/          # Bots incluidos en el proyecto
 ├── tests/             # Tests automáticos
 ├── pyproject.toml     # Configuración del paquete
+├── requirements.txt   # Dependencias para el despliegue web
 ├── LICENSE
 └── README.md
 ```
 
 ## Enlaces
 
-- Jugar online: *próximamente*
+- Jugar online: https://cinco-en-raya-cunef.streamlit.app
 - Documentación: *próximamente*
 - Clasificación de bots: *próximamente*
 

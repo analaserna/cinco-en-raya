@@ -5,11 +5,15 @@ import streamlit as st
 from cincoenraya import GameState, InvalidMoveError, Move, Player, play_match
 from cincoenraya.bots import GreedyBot, RandomBot
 from cincoenraya.match import BotError, BotTimeoutError, ask_bot
+from cincoenraya.registry import available_bots
 
 BOARD_SIZE = 15
 BOT_TIME_LIMIT = 2.0
 SYMBOLS = {None: "·", Player.BLACK: "●", Player.WHITE: "○"}
 PLAYER_NAMES = {Player.BLACK: "Negras", Player.WHITE: "Blancas"}
+COLOR_OPTIONS = ["Negras (empiezas tú)", "Blancas (empieza el bot)"]
+BOTS = {bot_cls.name: bot_cls for bot_cls in available_bots().values()}
+DEFAULT_BOT = GreedyBot.name
 
 BOARD_CSS = """
 <style>
@@ -31,12 +35,21 @@ div[data-testid="stHorizontalBlock"] button {
 """
 
 
-def new_game() -> None:
-    """Empieza una partida nueva. El humano juega con negras."""
+def new_game(keep_bot: bool = False) -> None:
+    """Empieza una partida nueva con las opciones elegidas.
+
+    Si keep_bot es True y ya hay un bot en la sesión, se conserva ese bot
+    en lugar de crear el elegido en las opciones. Lo usan los tests.
+    """
+    if not (keep_bot and "bot" in st.session_state):
+        st.session_state.bot = BOTS[st.session_state.get("opt_bot", DEFAULT_BOT)]()
+    color = st.session_state.get("opt_color", COLOR_OPTIONS[0])
+    st.session_state.human = Player.BLACK if color == COLOR_OPTIONS[0] else Player.WHITE
     st.session_state.game = GameState(BOARD_SIZE)
-    st.session_state.human = Player.BLACK
     st.session_state.error = None
     st.session_state.forfeit = None
+    if st.session_state.human is Player.WHITE:
+        bot_turn()
 
 
 def bot_turn() -> None:
@@ -70,6 +83,21 @@ def on_cell_click(row: int, col: int) -> None:
     st.session_state.error = None
     if not game.is_over():
         bot_turn()
+
+
+def render_options() -> None:
+    """Opciones de la partida: bot rival y color del humano."""
+    with st.expander("Opciones de la partida"):
+        names = list(BOTS)
+        st.selectbox(
+            "Bot rival",
+            names,
+            index=names.index(DEFAULT_BOT),
+            key="opt_bot",
+            on_change=new_game,
+        )
+        st.radio("Juegas con", COLOR_OPTIONS, key="opt_color", on_change=new_game)
+        st.caption("Al cambiar una opción empieza una partida nueva. Las negras mueven primero.")
 
 
 def render_status(game: GameState) -> None:
@@ -129,16 +157,15 @@ def render_demo() -> None:
 st.set_page_config(page_title="Cinco en raya", layout="centered")
 st.markdown(BOARD_CSS, unsafe_allow_html=True)
 
-if "bot" not in st.session_state:
-    st.session_state.bot = GreedyBot()
 if "game" not in st.session_state:
-    new_game()
+    new_game(keep_bot=True)
 
 game: GameState = st.session_state.game
 
 st.title("Cinco en raya")
 st.caption("Gana quien consiga cinco o más fichas seguidas en horizontal, vertical o diagonal.")
 
+render_options()
 render_status(game)
 if st.session_state.error:
     st.error(st.session_state.error)
