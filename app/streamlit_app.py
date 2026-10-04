@@ -4,8 +4,10 @@ import streamlit as st
 
 from cincoenraya import GameState, InvalidMoveError, Move, Player, play_match
 from cincoenraya.bots import GreedyBot, RandomBot
+from cincoenraya.match import BotError, BotTimeoutError, ask_bot
 
 BOARD_SIZE = 15
+BOT_TIME_LIMIT = 2.0
 SYMBOLS = {None: "·", Player.BLACK: "●", Player.WHITE: "○"}
 PLAYER_NAMES = {Player.BLACK: "Negras", Player.WHITE: "Blancas"}
 
@@ -30,29 +32,68 @@ div[data-testid="stHorizontalBlock"] button {
 
 
 def new_game() -> None:
-    """Empieza una partida nueva."""
+    """Empieza una partida nueva. El humano juega con negras."""
     st.session_state.game = GameState(BOARD_SIZE)
+    st.session_state.human = Player.BLACK
     st.session_state.error = None
+    st.session_state.forfeit = None
+
+
+def bot_turn() -> None:
+    """Pide su movimiento al bot. Si falla, tarda demasiado o juega ilegal, pierde."""
+    game = st.session_state.game
+    bot = st.session_state.bot
+    try:
+        game.play(ask_bot(bot, game.copy(), BOT_TIME_LIMIT))
+    except BotTimeoutError:
+        reason = "tiempo agotado"
+    except BotError as exc:
+        reason = f"error ({exc})"
+    except InvalidMoveError as exc:
+        reason = f"movimiento ilegal ({exc})"
+    else:
+        return
+    game.winner = st.session_state.human
+    st.session_state.forfeit = f"{bot.name} pierde la partida por {reason}."
 
 
 def on_cell_click(row: int, col: int) -> None:
-    """Juega en la casilla pulsada."""
+    """Juega el movimiento del humano y, si la partida sigue, responde el bot."""
+    game = st.session_state.game
+    if game.is_over() or game.current_player is not st.session_state.human:
+        return
     try:
-        st.session_state.game.play(Move(row, col))
-        st.session_state.error = None
+        game.play(Move(row, col))
     except InvalidMoveError as exc:
         st.session_state.error = str(exc)
+        return
+    st.session_state.error = None
+    if not game.is_over():
+        bot_turn()
 
 
 def render_status(game: GameState) -> None:
-    """Muestra de quién es el turno o cómo ha terminado la partida."""
-    if game.winner is not None:
-        st.success(f"Ganan las {PLAYER_NAMES[game.winner].lower()}.")
+    """Muestra el estado de la partida."""
+    human = st.session_state.human
+    bot_name = st.session_state.bot.name
+    if st.session_state.forfeit:
+        st.success(f"{st.session_state.forfeit} Has ganado.")
+    elif game.winner is human:
+        st.success("Has ganado.")
+    elif game.winner is not None:
+        st.error(f"Ha ganado {bot_name}.")
     elif game.is_draw():
         st.info("Empate: el tablero está lleno.")
     else:
-        player = game.current_player
-        st.write(f"Turno de: **{PLAYER_NAMES[player]}** {SYMBOLS[player]}")
+        st.write(
+            f"Juegas con **{PLAYER_NAMES[human].lower()}** {SYMBOLS[human]} "
+            f"contra **{bot_name}**. Te toca."
+        )
+        if game.last_move is not None:
+            st.caption(
+                f"Último movimiento del bot: fila {game.last_move.row + 1}, "
+                f"columna {game.last_move.col + 1}."
+            )
 
 
 def render_board(game: GameState) -> None:
@@ -88,6 +129,8 @@ def render_demo() -> None:
 st.set_page_config(page_title="Cinco en raya", layout="centered")
 st.markdown(BOARD_CSS, unsafe_allow_html=True)
 
+if "bot" not in st.session_state:
+    st.session_state.bot = GreedyBot()
 if "game" not in st.session_state:
     new_game()
 
