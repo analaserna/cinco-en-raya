@@ -17,6 +17,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov"]
+web = ["streamlit"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
