@@ -34,3 +34,4 @@ print(result.winner_name, result.reason.value)
 - [Reglas](reglas.md): reglas del juego.
 - [Tutorial: crea tu bot](tutorial-bot.md): cómo programar un bot y enviarlo al repositorio, de principio a fin.
 - [Referencia del API](api.md): documentación de todas las clases y funciones públicas.
+- [Clasificación de bots](https://analaserna.github.io/cinco-en-raya/): resultados del torneo entre todos los bots, actualizados automáticamente.
