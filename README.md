@@ -81,7 +81,7 @@ cinco-en-raya/
 
 - Jugar online: https://cinco-en-raya-cunef.streamlit.app
 - Documentación: *próximamente*
-- Clasificación de bots: *próximamente*
+- Clasificación de bots: https://analaserna.github.io/cinco-en-raya/
 
 ## Autores
 

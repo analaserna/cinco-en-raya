@@ -128,3 +128,33 @@ def test_linea_de_comandos_guarda_la_clasificacion(tmp_path):
     contenido = salida.read_text(encoding="utf-8")
     assert "| Pos." in contenido
     assert "Táctico" in contenido
+
+class NombrePeligroso(Bot):
+    name = "<script>alert(1)</script>"
+
+    def choose_move(self, state):
+        return state.legal_moves()[0]
+
+
+def test_pagina_html_contiene_la_clasificacion():
+    result = run_tournament({"A": PrimeraLibre, "B": Falla}, games_per_pair=2)
+    pagina = result.to_html("2026-10-08 10:00 UTC")
+    assert pagina.startswith("<!DOCTYPE html>")
+    assert "Primera libre" in pagina
+    assert "2026-10-08 10:00 UTC" in pagina
+    assert "error del bot" in pagina
+
+
+def test_pagina_html_escapa_los_nombres_de_los_bots():
+    result = run_tournament({"A": PrimeraLibre, "B": NombrePeligroso}, games_per_pair=1)
+    pagina = result.to_html()
+    assert "<script>" not in pagina
+    assert "&lt;script&gt;" in pagina
+
+
+def test_linea_de_comandos_genera_la_pagina_html(tmp_path):
+    pagina = tmp_path / "public" / "index.html"
+    assert main(["--games", "1", "--html", str(pagina)]) == 0
+    contenido = pagina.read_text(encoding="utf-8")
+    assert "Clasificación de bots" in contenido
+    assert "Táctico" in contenido
