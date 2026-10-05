@@ -1,0 +1,31 @@
+site_name: Cinco en raya
+site_description: Juego de cinco en raya con plataforma para bots
+repo_url: https://github.com/analaserna/cinco-en-raya
+repo_name: analaserna/cinco-en-raya
+
+theme:
+  name: material
+  language: es
+
+nav:
+  - Inicio: index.md
+  - Reglas: reglas.md
+  - "Tutorial: crea tu bot": tutorial-bot.md
+  - Referencia del API: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            docstring_style: google
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.highlight
+  - pymdownx.superfences
