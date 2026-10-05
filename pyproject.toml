@@ -18,6 +18,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov"]
 web = ["streamlit"]
+docs = ["mkdocs>=1.6,<2", "mkdocs-material", "mkdocstrings[python]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
