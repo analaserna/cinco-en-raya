@@ -63,7 +63,7 @@ pytest
 ```
 
 ## Estructura del proyecto
-
+```
 cinco-en-raya/
 ├── .github/           # Workflows de GitHub Actions y plantilla de pull request
 ├── app/               # Interfaz web (Streamlit)
@@ -79,7 +79,7 @@ cinco-en-raya/
 ├── mkdocs.yml         # Configuración de la documentación
 ├── pyproject.toml     # Configuración del paquete
 └── requirements.txt   # Dependencias para el despliegue web
-
+```
 ## Enlaces
 
 - Jugar online: https://cinco-en-raya-cunef.streamlit.app
