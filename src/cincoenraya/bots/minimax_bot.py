@@ -1,4 +1,4 @@
-"""Bot minimax con poda alfa-beta y profundidad iterativa."""
+"""Bot minimax con poda alfa-beta, profundidad iterativa y detección de amenazas."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import time
 
 from cincoenraya.bot import Bot
 from cincoenraya.bots.heuristics import WIN_SCORE, evaluate, makes_five, move_delta, nearby_moves
+from cincoenraya.bots.threats import find_vcf, with_turn_passed
 from cincoenraya.game import GameState, Move, Player
 
 
@@ -15,13 +16,16 @@ class _SearchTimeout(Exception):
 
 
 class MinimaxBot(Bot):
-    """Bot que busca con minimax y poda alfa-beta todo lo que permite el tiempo.
+    """Bot que combina búsqueda de amenazas forzadas y minimax con poda alfa-beta.
 
-    Antes de buscar, gana si puede y bloquea si el rival puede ganar. Después
-    aplica profundidad iterativa: busca a profundidad 1, 2, 3... hasta
-    max_depth o hasta agotar time_limit, y juega la mejor jugada de la última
-    búsqueda completa. En cada iteración explora primero la mejor jugada de
-    la anterior, lo que hace la poda más eficaz.
+    En cada movimiento, por orden:
+        1. Si puede formar cinco en línea, lo hace.
+        2. Si el rival puede formar cinco en línea, le bloquea.
+        3. Si tiene una victoria por cuatros continuos (VCF), la juega.
+        4. Si el rival tendría una VCF, restringe la búsqueda a las jugadas
+           que la impiden.
+        5. Busca con minimax y poda alfa-beta, con profundidad iterativa
+           hasta max_depth o hasta agotar time_limit.
 
     Las posiciones se valoran con la evaluación por ventanas, calculada de
     forma incremental, y las casillas candidatas también se actualizan de
@@ -29,11 +33,12 @@ class MinimaxBot(Bot):
 
     Args:
         max_depth: profundidad máxima de búsqueda.
-        time_limit: segundos de búsqueda por movimiento.
+        time_limit: segundos de cálculo por movimiento.
         max_branching: número máximo de jugadas que explora en cada posición.
 
     Attributes:
-        last_depth: profundidad de la última búsqueda completa en el último movimiento.
+        last_depth: profundidad de la última búsqueda completa en el último
+            movimiento, o 0 si no hizo falta buscar.
     """
 
     name = "Minimax"
@@ -46,6 +51,7 @@ class MinimaxBot(Bot):
         self._deadline = math.inf
 
     def choose_move(self, state: GameState) -> Move:
+        self.last_depth = 0
         me = state.current_player
         candidates = nearby_moves(state)
 
@@ -56,11 +62,18 @@ class MinimaxBot(Bot):
             if makes_five(state, move, me.opponent()):
                 return move
 
-        self._deadline = time.perf_counter() + self.time_limit
-        cells = {(move.row, move.col) for move in candidates}
-        best_move = self._ordered_moves(state, cells)[0][1]
-        self.last_depth = 0
+        start = time.perf_counter()
+        winning = find_vcf(state, deadline=start + 0.2 * self.time_limit)
+        if winning is not None:
+            return winning
 
+        cells = {(move.row, move.col) for move in candidates}
+        defenses = self._vcf_defenses(state, cells, start + 0.5 * self.time_limit)
+        if defenses:
+            cells = defenses
+
+        self._deadline = start + self.time_limit
+        best_move = self._ordered_moves(state, cells)[0][1]
         for depth in range(1, self.max_depth + 1):
             try:
                 move, value = self._best_move(state, cells, depth, best_move)
@@ -71,6 +84,29 @@ class MinimaxBot(Bot):
             if value >= WIN_SCORE:
                 break
         return best_move
+
+    def _vcf_defenses(self, state: GameState, cells: set, deadline: float) -> set | None:
+        """Jugadas que impiden una victoria por cuatros continuos del rival.
+
+        Devuelve None si el rival no tiene ninguna VCF. Si la tiene, devuelve
+        el conjunto de casillas tras las cuales el rival deja de tenerla, que
+        puede estar vacío si ninguna la impide.
+        """
+        threat = find_vcf(with_turn_passed(state), deadline=deadline)
+        if threat is None:
+            return None
+
+        options = {(threat.row, threat.col)}
+        options.update((move.row, move.col) for _, move in self._ordered_moves(state, cells))
+        safe = set()
+        for row, col in options:
+            if time.perf_counter() > deadline:
+                break
+            child = state.copy()
+            child.play(Move(row, col))
+            if find_vcf(child, deadline=deadline) is None:
+                safe.add((row, col))
+        return safe
 
     def _check_time(self) -> None:
         """Interrumpe la búsqueda si se ha agotado el tiempo."""
