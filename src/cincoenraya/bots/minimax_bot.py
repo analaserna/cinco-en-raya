@@ -1,33 +1,49 @@
-"""Bot minimax con poda alfa-beta sobre la evaluación por ventanas."""
+"""Bot minimax con poda alfa-beta y profundidad iterativa."""
 
 from __future__ import annotations
 
 import math
+import time
 
 from cincoenraya.bot import Bot
 from cincoenraya.bots.heuristics import WIN_SCORE, evaluate, makes_five, move_delta, nearby_moves
 from cincoenraya.game import GameState, Move, Player
 
 
-class MinimaxBot(Bot):
-    """Bot que busca varias jugadas hacia delante con minimax y poda alfa-beta.
+class _SearchTimeout(Exception):
+    """Se ha agotado el tiempo de búsqueda."""
 
-    Antes de buscar, gana si puede y bloquea si el rival puede ganar. En la
-    búsqueda, las posiciones finales se valoran con la evaluación por
-    ventanas, calculada de forma incremental con move_delta. En cada
-    posición solo se exploran las max_branching casillas candidatas más
-    prometedoras, ordenadas de mejor a peor para que la poda sea eficaz.
+
+class MinimaxBot(Bot):
+    """Bot que busca con minimax y poda alfa-beta todo lo que permite el tiempo.
+
+    Antes de buscar, gana si puede y bloquea si el rival puede ganar. Después
+    aplica profundidad iterativa: busca a profundidad 1, 2, 3... hasta
+    max_depth o hasta agotar time_limit, y juega la mejor jugada de la última
+    búsqueda completa. En cada iteración explora primero la mejor jugada de
+    la anterior, lo que hace la poda más eficaz.
+
+    Las posiciones se valoran con la evaluación por ventanas, calculada de
+    forma incremental, y las casillas candidatas también se actualizan de
+    forma incremental en cada jugada de la búsqueda.
 
     Args:
-        depth: número de jugadas (propias y del rival) que mira hacia delante.
+        max_depth: profundidad máxima de búsqueda.
+        time_limit: segundos de búsqueda por movimiento.
         max_branching: número máximo de jugadas que explora en cada posición.
+
+    Attributes:
+        last_depth: profundidad de la última búsqueda completa en el último movimiento.
     """
 
     name = "Minimax"
 
-    def __init__(self, depth: int = 2, max_branching: int = 10) -> None:
-        self.depth = depth
+    def __init__(self, max_depth: int = 6, time_limit: float = 0.5, max_branching: int = 10) -> None:
+        self.max_depth = max_depth
+        self.time_limit = time_limit
         self.max_branching = max_branching
+        self.last_depth = 0
+        self._deadline = math.inf
 
     def choose_move(self, state: GameState) -> Move:
         me = state.current_player
@@ -40,27 +56,72 @@ class MinimaxBot(Bot):
             if makes_five(state, move, me.opponent()):
                 return move
 
-        best_move, _ = self._best_move(state, self.depth)
+        self._deadline = time.perf_counter() + self.time_limit
+        cells = {(move.row, move.col) for move in candidates}
+        best_move = self._ordered_moves(state, cells)[0][1]
+        self.last_depth = 0
+
+        for depth in range(1, self.max_depth + 1):
+            try:
+                move, value = self._best_move(state, cells, depth, best_move)
+            except _SearchTimeout:
+                break
+            best_move = move
+            self.last_depth = depth
+            if value >= WIN_SCORE:
+                break
         return best_move
 
-    def _ordered_moves(self, state: GameState) -> list[tuple[int, Move]]:
+    def _check_time(self) -> None:
+        """Interrumpe la búsqueda si se ha agotado el tiempo."""
+        if time.perf_counter() > self._deadline:
+            raise _SearchTimeout
+
+    def _ordered_moves(self, state: GameState, cells: set) -> list[tuple[int, Move]]:
         """Jugadas candidatas con su move_delta para el jugador al que le toca.
 
         Se devuelven ordenadas de mayor a menor delta y limitadas a max_branching.
         """
         mover = state.current_player
-        scored = [(move_delta(state, move, mover), move) for move in nearby_moves(state)]
+        scored = [(move_delta(state, Move(r, c), mover), Move(r, c)) for r, c in cells]
         scored.sort(key=lambda item: item[0], reverse=True)
         return scored[: self.max_branching]
 
-    def _best_move(self, state: GameState, depth: int) -> tuple[Move, float]:
-        """Mejor jugada en la raíz de la búsqueda y su valor."""
+    @staticmethod
+    def _next_cells(state: GameState, move: Move, cells: set) -> set:
+        """Candidatas después de jugar move en state.
+
+        Se quita la casilla jugada y se añaden sus vecinas vacías. Equivale a
+        recalcular nearby_moves en la posición siguiente, pero es mucho más rápido.
+        """
+        new_cells = set(cells)
+        new_cells.discard((move.row, move.col))
+        for d_row in (-1, 0, 1):
+            for d_col in (-1, 0, 1):
+                r, c = move.row + d_row, move.col + d_col
+                if (
+                    (r, c) != (move.row, move.col)
+                    and 0 <= r < state.size
+                    and 0 <= c < state.size
+                    and state.cell(r, c) is None
+                ):
+                    new_cells.add((r, c))
+        return new_cells
+
+    def _best_move(self, state: GameState, cells: set, depth: int, first: Move) -> tuple[Move, float]:
+        """Mejor jugada en la raíz de una búsqueda a la profundidad indicada.
+
+        La jugada first, la mejor de la iteración anterior, se explora la primera.
+        """
         me = state.current_player
         score = evaluate(state, me)
+        moves = self._ordered_moves(state, cells)
+        moves.sort(key=lambda item: item[1] != first)
+
         alpha, beta = -math.inf, math.inf
-        best_move, best_value = None, -math.inf
-        for delta, move in self._ordered_moves(state):
-            value = self._value_after(state, move, delta, depth, alpha, beta, score, me)
+        best_move, best_value = moves[0][1], -math.inf
+        for delta, move in moves:
+            value = self._value_after(state, cells, move, delta, depth, alpha, beta, score, me)
             if value > best_value:
                 best_move, best_value = move, value
             alpha = max(alpha, best_value)
@@ -69,6 +130,7 @@ class MinimaxBot(Bot):
     def _value_after(
         self,
         state: GameState,
+        cells: set,
         move: Move,
         mover_delta: int,
         depth: int,
@@ -77,11 +139,7 @@ class MinimaxBot(Bot):
         score: int,
         me: Player,
     ) -> float:
-        """Valor para me de jugar move en state, mirando depth jugadas en total.
-
-        score es la evaluación de state para me. mover_delta es el move_delta
-        de la jugada para el jugador que la hace.
-        """
+        """Valor para me de jugar move en state, mirando depth jugadas en total."""
         mover = state.current_player
         if makes_five(state, move, mover):
             win = WIN_SCORE + depth
@@ -91,13 +149,15 @@ class MinimaxBot(Bot):
         if depth == 1:
             return child_score
 
+        child_cells = self._next_cells(state, move, cells)
         child = state.copy()
         child.play(move)
-        return self._search(child, depth - 1, alpha, beta, child_score, me)
+        return self._search(child, child_cells, depth - 1, alpha, beta, child_score, me)
 
     def _search(
         self,
         state: GameState,
+        cells: set,
         depth: int,
         alpha: float,
         beta: float,
@@ -105,21 +165,22 @@ class MinimaxBot(Bot):
         me: Player,
     ) -> float:
         """Minimax con poda alfa-beta. Devuelve el valor de state para me."""
-        moves = self._ordered_moves(state)
+        self._check_time()
+        moves = self._ordered_moves(state, cells)
         if not moves:
             return score
 
         if state.current_player is me:
             value = -math.inf
             for delta, move in moves:
-                value = max(value, self._value_after(state, move, delta, depth, alpha, beta, score, me))
+                value = max(value, self._value_after(state, cells, move, delta, depth, alpha, beta, score, me))
                 alpha = max(alpha, value)
                 if alpha >= beta:
                     break
         else:
             value = math.inf
             for delta, move in moves:
-                value = min(value, self._value_after(state, move, delta, depth, alpha, beta, score, me))
+                value = min(value, self._value_after(state, cells, move, delta, depth, alpha, beta, score, me))
                 beta = min(beta, value)
                 if alpha >= beta:
                     break
