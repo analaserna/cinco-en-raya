@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import inspect
 import random
+import sys
+from pathlib import Path
 
 from cincoenraya.bot import Bot
 from cincoenraya.game import GameState, Move
@@ -11,7 +14,60 @@ from cincoenraya.match import BotError, BotTimeoutError, EndReason, ask_bot, pla
 
 DEFAULT_TIME_LIMIT = 1.0
 
+ALLOWED_MODULES = {"cincoenraya", "__future__"}
+
+FORBIDDEN_MODULES = {
+    "asyncio", "builtins", "ctypes", "ftplib", "glob", "http", "importlib", "io",
+    "marshal", "multiprocessing", "os", "pathlib", "pickle", "shutil", "signal",
+    "smtplib", "socket", "ssl", "subprocess", "sys", "tempfile", "threading",
+    "urllib", "webbrowser",
+}
+
+FORBIDDEN_CALLS = {"open", "eval", "exec", "compile", "__import__", "input", "breakpoint"}
+
 _PATRON_CASI_LLENO = ("XXOOX", "OOXXO", "XXOOX", "OOXXO", "XXOOX")
+
+
+def check_source(path: str | Path) -> list[str]:
+    """Revisa el código de un archivo sin ejecutarlo.
+
+    Detecta importaciones de módulos que permiten acceder a archivos, a la
+    red o a otros procesos, importaciones de librerías que no pertenecen a
+    la biblioteca estándar, y llamadas a funciones como open, eval o exec.
+
+    Returns:
+        Lista de problemas encontrados, con su número de línea.
+    """
+    tree = ast.parse(Path(path).read_text(encoding="utf-8"), filename=str(path))
+    problems = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in FORBIDDEN_CALLS:
+            problems.append(f"línea {node.lineno}: no se permite llamar a {node.func.id}().")
+            continue
+        if isinstance(node, ast.Import):
+            names = [alias.name for alias in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.level == 0:
+            names = [node.module or ""]
+        else:
+            continue
+        for name in names:
+            top = name.split(".")[0]
+            if top in FORBIDDEN_MODULES:
+                problems.append(f"línea {node.lineno}: no se permite importar {name}.")
+            elif top not in ALLOWED_MODULES and top not in sys.stdlib_module_names:
+                problems.append(f"línea {node.lineno}: {name} no pertenece a la biblioteca estándar.")
+    return problems
+
+
+def _source_problems(bot_cls: type) -> list[str]:
+    """Problemas del archivo de código en el que está definido el bot."""
+    try:
+        source = inspect.getsourcefile(bot_cls)
+    except TypeError:
+        return []
+    if source is None:
+        return []
+    return [f"Código no permitido en {Path(source).name}, {problem}" for problem in check_source(source)]
 
 
 def _mid_game(moves: int = 40) -> GameState:
@@ -53,10 +109,11 @@ def sample_states() -> list[tuple[str, GameState]]:
 def validate_bot(bot_cls: type, time_limit: float = DEFAULT_TIME_LIMIT) -> list[str]:
     """Comprueba que una clase de bot cumple el contrato del API.
 
-    Comprueba que hereda de Bot, que se puede crear sin argumentos, que
-    tiene un nombre propio, que devuelve movimientos legales a tiempo en
-    estados variados y que completa partidas contra RandomBot con ambos
-    colores y en un tablero pequeño.
+    Comprueba que hereda de Bot, que su código no usa módulos ni funciones
+    prohibidos, que se puede crear sin argumentos, que tiene un nombre
+    propio, que devuelve movimientos legales a tiempo en estados variados y
+    que completa partidas contra RandomBot con ambos colores y en un
+    tablero pequeño.
 
     Args:
         bot_cls: la clase del bot, no una instancia.
@@ -70,12 +127,13 @@ def validate_bot(bot_cls: type, time_limit: float = DEFAULT_TIME_LIMIT) -> list[
     if not (inspect.isclass(bot_cls) and issubclass(bot_cls, Bot)):
         return ["No es una subclase de Bot."]
 
+    problems = _source_problems(bot_cls)
+
     try:
         bot = bot_cls()
     except Exception as exc:
-        return [f"No se puede crear sin argumentos: {type(exc).__name__}: {exc}"]
+        return problems + [f"No se puede crear sin argumentos: {type(exc).__name__}: {exc}"]
 
-    problems = []
     if not isinstance(bot.name, str) or not bot.name.strip() or bot.name == Bot.name:
         problems.append("Debe definir un atributo name propio.")
 

@@ -87,7 +87,8 @@ No hace falta registrar el bot en ningún sitio: el proyecto detecta automática
 - Debe poder crearse sin argumentos, por ejemplo `CenterBot()`.
 - Debe devolver siempre un movimiento legal, en tableros de cualquier tamaño (mínimo 5x5).
 - Debe responder en menos de 1 segundo por movimiento.
-- Solo puede usar la biblioteca estándar de Python.
+- Solo puede usar la biblioteca estándar de Python y el paquete `cincoenraya`.
+- No puede acceder a archivos, a la red ni a otros procesos: no se permite importar módulos como `os`, `sys`, `subprocess` o `socket`, ni llamar a `open`, `eval` o `exec`. La validación revisa el código automáticamente.
 
 Un bot que lanza una excepción, supera el tiempo límite o devuelve un movimiento ilegal pierde la partida automáticamente.
 
