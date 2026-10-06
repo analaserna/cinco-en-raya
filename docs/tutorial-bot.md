@@ -79,10 +79,10 @@ from cincoenraya.bot import Bot
 from cincoenraya.game import GameState, Move
 
 
-class CenterBot(Bot):
+class MiBot(Bot):
     """Elige la casilla libre más próxima al centro del tablero."""
 
-    name = "Centro"
+    name = "MiBot"
 
     def choose_move(self, state: GameState) -> Move:
         center = (state.size - 1) / 2
@@ -97,7 +97,7 @@ No hace falta registrar el bot en ningún sitio: el proyecto detecta automática
 ## 6. Normas que debe cumplir tu bot
 
 - El nombre de la clase y el atributo `name` deben ser propios y distintos de los de los demás bots.
-- Debe poder crearse sin argumentos, por ejemplo `CenterBot()`.
+- Debe poder crearse sin argumentos, por ejemplo `MiBot()`.
 - Debe devolver siempre un movimiento legal, en tableros de cualquier tamaño (mínimo 5x5).
 - Debe responder en menos de 1 segundo por movimiento.
 - Solo puede usar la biblioteca estándar de Python y el paquete `cincoenraya`.
@@ -110,7 +110,7 @@ Un bot que lanza una excepción, supera el tiempo límite o devuelve un movimien
 Juega una partida contra otro bot:
 
 ```bash
-python -c "from cincoenraya import play_match; from cincoenraya.bots import RandomBot; from cincoenraya.bots.center_bot import CenterBot; r = play_match(CenterBot(), RandomBot(0)); print(r.final_state); print(r.winner_name, r.reason.value)"
+python -c "from cincoenraya import play_match; from cincoenraya.bots import RandomBot; from cincoenraya.bots.center_bot import MiBot; r = play_match(MiBot(), RandomBot(0)); print(r.final_state); print(r.winner_name, r.reason.value)"
 ```
 
 Comprueba que cumple el contrato del API:
@@ -130,8 +130,8 @@ pytest
 ## 8. Envía tu bot
 
 ```bash
-git add src/cincoenraya/bots/center_bot.py
-git commit -m "Añade CenterBot"
+git add src/cincoenraya/bots/mi_bot.py
+git commit -m "Añade MiBot"
 git push -u origin bot/mi-bot
 ```
 
