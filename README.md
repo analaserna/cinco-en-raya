@@ -83,6 +83,10 @@ cinco-en-raya/
 - Documentación: *próximamente*
 - Clasificación de bots: https://analaserna.github.io/cinco-en-raya/
 
+## Contribuir
+
+Cualquier desarrollador puede añadir su propio bot mediante una pull request. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) y el tutorial de la documentación.
+
 ## Autores
 
 - Pablo Valcarce
