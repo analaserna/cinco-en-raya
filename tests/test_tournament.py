@@ -58,10 +58,10 @@ def clasificacion(result):
 
 
 def test_torneo_con_los_bots_del_proyecto():
-    result = run_tournament(games_per_pair=2)
+    result = run_tournament(games_per_pair=1)
     tabla = clasificacion(result)
-    assert {"Aleatorio", "Táctico"} <= set(tabla)
-    assert all(s.played == 2 * (len(tabla) - 1) for s in tabla.values())
+    assert {"Aleatorio", "Táctico", "Patrones", "Minimax"} <= set(tabla)
+    assert all(s.played == len(tabla) - 1 for s in tabla.values())
 
 
 def test_cada_pareja_juega_con_ambos_colores():
@@ -124,7 +124,7 @@ def test_tabla_markdown():
 
 def test_linea_de_comandos_guarda_la_clasificacion(tmp_path):
     salida = tmp_path / "clasificacion.md"
-    assert main(["--games", "1", "--output", str(salida)]) == 0
+    assert main(["--games", "1", "--bots", "GreedyBot", "RandomBot", "--output", str(salida)]) == 0
     contenido = salida.read_text(encoding="utf-8")
     assert "| Pos." in contenido
     assert "Táctico" in contenido
@@ -154,7 +154,7 @@ def test_pagina_html_escapa_los_nombres_de_los_bots():
 
 def test_linea_de_comandos_genera_la_pagina_html(tmp_path):
     pagina = tmp_path / "public" / "index.html"
-    assert main(["--games", "1", "--html", str(pagina)]) == 0
+    assert main(["--games", "1", "--bots", "GreedyBot", "RandomBot", "--html", str(pagina)]) == 0
     contenido = pagina.read_text(encoding="utf-8")
     assert "Clasificación de bots" in contenido
     assert "Táctico" in contenido

@@ -249,13 +249,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--time-limit", type=float, default=DEFAULT_TIME_LIMIT, help="Segundos por movimiento.")
     parser.add_argument("--output", type=Path, help="Archivo Markdown donde guardar la clasificación.")
     parser.add_argument("--html", type=Path, help="Archivo HTML donde guardar la página de la clasificación.")
+    parser.add_argument("--bots", nargs="+", help="Nombres de clase de los bots que participan (por defecto, todos).")
     args = parser.parse_args(argv)
 
     def show(result: MatchResult) -> None:
         winner = result.winner_name or "sin ganador"
         print(f"{result.black} vs {result.white}: {winner} ({result.reason.value})")
 
+    bots = available_bots()
+    if args.bots:
+        bots = {name: cls for name, cls in bots.items() if name in args.bots}
+
     result = run_tournament(
+        bots,
         games_per_pair=args.games,
         size=args.size,
         time_limit=args.time_limit,
