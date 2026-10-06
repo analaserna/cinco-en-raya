@@ -2,7 +2,7 @@
 
 Implementación open-source del juego cinco en raya (Gomoku) para dos jugadores, con una interfaz web para jugar contra bots y una plataforma para que cualquier desarrollador programe y añada su propio bot.
 
-- Jugar online: [https://cinco-en-raya-cunef.streamlit.app](https://NOMBRE.streamlit.app)
+- Jugar online: [https://cinco-en-raya-cunef.streamlit.app](https://cinco-en-raya-cunef.streamlit.app)
 - Código fuente: [github.com/analaserna/cinco-en-raya](https://github.com/analaserna/cinco-en-raya)
 
 ## Instalación
