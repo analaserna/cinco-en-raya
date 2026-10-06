@@ -20,12 +20,25 @@ git switch -c bot/mi-bot
 
 ## 3. Prepara el entorno
 
+En macOS y Linux:
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate        # En Windows: .venv\Scripts\Activate.ps1
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 pytest
 ```
+
+En Windows (PowerShell):
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+pytest
+```
+
+Si PowerShell no permite ejecutar el script de activación, ejecuta una vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` y vuelve a intentarlo.
 
 Todos los tests deben pasar antes de empezar.
 

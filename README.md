@@ -80,7 +80,8 @@ cinco-en-raya/
 ## Enlaces
 
 - Jugar online: https://cinco-en-raya-cunef.streamlit.app
-- Documentación: *próximamente*
+- Documentación: https://cinco-en-raya.readthedocs.io/
+- Tutorial para crear un bot: https://cinco-en-raya.readthedocs.io/es/latest/tutorial-bot/
 - Clasificación de bots: https://analaserna.github.io/cinco-en-raya/
 
 ## Contribuir
