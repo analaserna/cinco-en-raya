@@ -82,3 +82,23 @@ def test_candidatas_incrementales_coinciden_con_recalcularlas(jugar):
 def test_gana_a_random():
     assert play_match(MinimaxBot(), RandomBot(0)).winner is Player.BLACK
     assert play_match(RandomBot(1), MinimaxBot()).winner is Player.WHITE
+
+def test_juega_una_victoria_por_cuatros_continuos(jugar):
+    state = GameState()
+    negras = [(5, 3), (5, 4), (5, 5), (6, 6), (7, 6)]
+    blancas = [(5, 2), (0, 0), (0, 14), (14, 0), (14, 14)]
+    jugar(state, negras, blancas)
+    assert MinimaxBot().choose_move(state) == Move(5, 6)
+
+
+def test_defiende_contra_una_victoria_por_cuatros_continuos(jugar):
+    from cincoenraya.bots.threats import find_vcf
+
+    state = GameState()
+    negras = [(5, 3), (5, 4), (5, 5), (6, 6), (7, 6)]
+    blancas = [(5, 2), (0, 0), (0, 14), (14, 0)]
+    jugar(state, negras, blancas)
+    move = MinimaxBot().choose_move(state)
+    after = state.copy()
+    after.play(move)
+    assert find_vcf(after) is None
