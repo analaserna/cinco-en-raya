@@ -11,6 +11,7 @@ nav:
   - Inicio: index.md
   - Reglas: reglas.md
   - "Tutorial: crea tu bot": tutorial-bot.md
+  - Bots del proyecto: bots.md
   - Referencia del API: api.md
   - Clasificación: https://analaserna.github.io/cinco-en-raya/
 

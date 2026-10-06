@@ -64,18 +64,21 @@ pytest
 
 ## Estructura del proyecto
 
-```
 cinco-en-raya/
+├── .github/           # Workflows de GitHub Actions y plantilla de pull request
 ├── app/               # Interfaz web (Streamlit)
+├── docs/              # Documentación (MkDocs)
 ├── examples/          # Ejemplos de uso desde código
-├── src/cincoenraya/   # Lógica del juego, API de bots y motor de partidas
+├── src/cincoenraya/   # Lógica del juego, API de bots, motor de partidas y torneo
 │   └── bots/          # Bots incluidos en el proyecto
 ├── tests/             # Tests automáticos
-├── pyproject.toml     # Configuración del paquete
-├── requirements.txt   # Dependencias para el despliegue web
+├── .readthedocs.yaml  # Configuración de ReadTheDocs
+├── CONTRIBUTING.md    # Guía para contribuir
 ├── LICENSE
-└── README.md
-```
+├── README.md
+├── mkdocs.yml         # Configuración de la documentación
+├── pyproject.toml     # Configuración del paquete
+└── requirements.txt   # Dependencias para el despliegue web
 
 ## Enlaces
 
@@ -83,6 +86,18 @@ cinco-en-raya/
 - Documentación: https://cinco-en-raya.readthedocs.io/
 - Tutorial para crear un bot: https://cinco-en-raya.readthedocs.io/es/latest/tutorial-bot/
 - Clasificación de bots: https://analaserna.github.io/cinco-en-raya/
+
+## Bots incluidos
+
+| Bot | Idea principal |
+|---|---|
+| Aleatorio | Juega movimientos legales al azar. |
+| Centro | Juega en la casilla libre más cercana al centro (bot de ejemplo del tutorial). |
+| Táctico | Gana o bloquea en una jugada y, si no, alarga sus líneas. |
+| Patrones | Elige la jugada que más mejora la evaluación por ventanas. |
+| Minimax | Busca victorias por cuatros continuos y usa minimax con poda alfa-beta y profundidad iterativa. |
+
+La explicación detallada de cada bot está en la documentación.
 
 ## Contribuir
 
