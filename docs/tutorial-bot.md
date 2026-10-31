@@ -70,7 +70,7 @@ Consulta la [referencia del API](api.md) para el detalle completo.
 
 ## 5. Escribe tu bot
 
-Crea un archivo nuevo en `src/cincoenraya/bots/`, por ejemplo `src/cincoenraya/bots/center_bot.py`:
+Crea un archivo nuevo en `src/cincoenraya/bots/` con un nombre propio, por ejemplo `src/cincoenraya/bots/mi_bot.py`. El proyecto ya incluye este mismo ejemplo como `CenterBot`, así que elige un nombre de archivo, de clase y un `name` que no existan todavía:
 
 ```python
 """Bot de ejemplo: juega en la casilla libre más cercana al centro."""
@@ -110,7 +110,7 @@ Un bot que lanza una excepción, supera el tiempo límite o devuelve un movimien
 Juega una partida contra otro bot:
 
 ```bash
-python -c "from cincoenraya import play_match; from cincoenraya.bots import RandomBot; from cincoenraya.bots.center_bot import MiBot; r = play_match(MiBot(), RandomBot(0)); print(r.final_state); print(r.winner_name, r.reason.value)"
+python -c "from cincoenraya import play_match; from cincoenraya.bots import RandomBot; from cincoenraya.bots.mi_bot import MiBot; r = play_match(MiBot(), RandomBot(0)); print(r.final_state); print(r.winner_name, r.reason.value)"
 ```
 
 Comprueba que cumple el contrato del API:
