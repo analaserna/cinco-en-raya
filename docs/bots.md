@@ -59,13 +59,3 @@ Para responder en menos de un segundo:
 
 La clasificación actualizada del torneo entre todos los bots está en la [página de clasificación](https://analaserna.github.io/cinco-en-raya/).
 
-### Partidas contra humanos
-
-| Partida | Jugador | Color del jugador | Ganador |
-|---|---|---|---|
-| 1 | | Negras | |
-| 2 | | Negras | |
-| 3 | | Blancas | |
-| 4 | | Negras | |
-| 5 | | Negras | |
-| 6 | | Blancas | |
