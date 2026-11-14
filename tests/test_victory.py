@@ -82,3 +82,30 @@ def test_el_turno_no_cambia_tras_ganar(jugar):
     jugar(state, [(7, c) for c in range(3, 8)], BLANCAS_LEJOS)
     assert state.current_player is Player.BLACK
     assert state.last_move == Move(7, 7)
+    
+
+
+def test_linea_ganadora_horizontal(jugar):
+    state = GameState()
+    jugar(state, [(7, c) for c in range(3, 8)], BLANCAS_LEJOS)
+    assert state.winning_line() == [Move(7, c) for c in range(3, 8)]
+
+
+def test_linea_ganadora_diagonal_rellenando_hueco(jugar):
+    state = GameState()
+    jugar(state, [(3, 3), (4, 4), (6, 6), (7, 7), (5, 5)], BLANCAS_LEJOS)
+    assert state.winning_line() == [Move(r, r) for r in range(3, 8)]
+
+
+def test_linea_ganadora_de_seis(jugar):
+    state = GameState()
+    negras = [(7, 3), (7, 4), (7, 5), (7, 7), (7, 8), (7, 6)]
+    blancas = [(0, 0), (0, 1), (0, 2), (0, 3), (2, 0)]
+    jugar(state, negras, blancas)
+    assert len(state.winning_line()) == 6
+
+
+def test_sin_ganador_no_hay_linea():
+    state = GameState()
+    state.play(Move(7, 7))
+    assert state.winning_line() == []

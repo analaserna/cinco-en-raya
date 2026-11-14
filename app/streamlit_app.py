@@ -72,12 +72,31 @@ BOARD_CSS = """
     opacity: 1;
     cursor: default;
 }
+.st-key-tablero .coord {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    font-size: 11px;
+    font-weight: 600;
+    color: #5a4320;
+}
+.st-key-tablero div[data-testid="stMarkdownContainer"] {
+    width: 100%;
+    margin-bottom: 0 !important;
+}
+.st-key-tablero div[data-testid="stMarkdownContainer"] p {
+    margin: 0;
+}
 </style>
 """
 
 CELL_TYPES = {None: "tertiary", Player.BLACK: "primary", Player.WHITE: "secondary"}
 
-
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+def coord(move: Move) -> str:
+    """Nombre de una casilla en notación de tablero, por ejemplo H8."""
+    return f"{LETTERS[move.col]}{move.row + 1}"
 def new_game(keep_bot: bool = False) -> None:
     """Empieza una partida nueva con las opciones elegidas.
 
@@ -144,42 +163,42 @@ def render_options() -> None:
 
 
 def render_status(game: GameState) -> None:
-    """Muestra el estado de la partida."""
+    """Muestra el estado de la partida y la última jugada."""
     human = st.session_state.human
     bot_name = st.session_state.bot.name
     if st.session_state.forfeit:
-        st.success(f"{st.session_state.forfeit} Has ganado.")
+        st.success(f"**Has ganado.** {st.session_state.forfeit}")
     elif game.winner is human:
-        st.success("Has ganado.")
+        st.success(f"**Has ganado** en {game.move_count} jugadas.")
     elif game.winner is not None:
-        st.error(f"Ha ganado {bot_name}.")
+        st.error(f"**Ha ganado {bot_name}** en {game.move_count} jugadas.")
     elif game.is_draw():
-        st.info("Empate: el tablero está lleno.")
+        st.info("**Empate:** el tablero está lleno.")
     else:
-        st.write(
+        st.markdown(
             f"Juegas con **{PLAYER_NAMES[human].lower()}** {SYMBOLS[human]} "
-            f"contra **{bot_name}**. Te toca."
+            f"contra **{bot_name}**. Jugada {game.move_count + 1}: te toca."
         )
-        if game.last_move is not None:
-            st.caption(
-                f"Último movimiento del bot: fila {game.last_move.row + 1}, "
-                f"columna {game.last_move.col + 1}."
-            )
-
+    if game.last_move is not None:
+        st.caption(f"Última jugada: {coord(game.last_move)}")
 
 def render_board(game: GameState) -> None:
-    """Dibuja el tablero como una cuadrícula de botones con aspecto de tablero real.
+    """Dibuja el tablero con coordenadas, como una cuadrícula de botones.
 
-    Cada casilla usa un tipo de botón distinto según su contenido (vacía,
-    negra o blanca), y el CSS dibuja las líneas y las fichas. La última
-    jugada se marca con un punto rojo.
+    Cada casilla usa un tipo de botón según su contenido (vacía, negra o
+    blanca) y el CSS dibuja las líneas y las fichas. La última jugada se
+    marca con un punto rojo y, al terminar, la línea ganadora con un borde rojo.
     """
     with st.container(key="tablero"):
+        header = st.columns(game.size + 1, gap="small")
+        for col in range(game.size):
+            header[col + 1].markdown(f'<div class="coord">{LETTERS[col]}</div>', unsafe_allow_html=True)
         for row in range(game.size):
-            columns = st.columns(game.size, gap="small")
-            for col, column in enumerate(columns):
+            columns = st.columns(game.size + 1, gap="small")
+            columns[0].markdown(f'<div class="coord">{row + 1}</div>', unsafe_allow_html=True)
+            for col in range(game.size):
                 occupant = game.cell(row, col)
-                column.button(
+                columns[col + 1].button(
                     SYMBOLS[occupant],
                     key=f"cell-{row}-{col}",
                     type=CELL_TYPES[occupant],
@@ -187,14 +206,22 @@ def render_board(game: GameState) -> None:
                     args=(row, col),
                     disabled=occupant is not None or game.is_over(),
                 )
+
+    rules = []
     if game.last_move is not None:
         row, col = game.last_move.row, game.last_move.col
-        st.markdown(
-            f"<style>.st-key-cell-{row}-{col} button::before {{"
+        rules.append(
+            f".st-key-cell-{row}-{col} button::before {{"
             "content: ''; position: absolute; inset: 40%; border-radius: 50%;"
-            "background: #d62828; z-index: 1; }</style>",
-            unsafe_allow_html=True,
+            "background: #d62828; z-index: 1; }"
         )
+    for move in game.winning_line():
+        rules.append(
+            f".st-key-cell-{move.row}-{move.col} button::after {{"
+            "box-shadow: 0 0 0 3px #d62828, 0 0 8px #d62828; }"
+        )
+    if rules:
+        st.markdown(f"<style>{' '.join(rules)}</style>", unsafe_allow_html=True)
 
 def render_demo() -> None:
     """Partida de demostración entre dos bots."""
