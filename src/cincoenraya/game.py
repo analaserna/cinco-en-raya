@@ -131,7 +131,36 @@ class GameState:
         clone.move_count = self.move_count
         clone.last_move = self.last_move
         return clone
+    
+    
+    def winning_line(self) -> list[Move]:
+        """Casillas de la línea ganadora, ordenadas, o lista vacía si no la hay.
 
+        La línea se busca a partir de la última jugada, que es la que dio la
+        victoria. Si la partida terminó de otra forma (por ejemplo, porque un
+        bot perdió por un error), devuelve una lista vacía.
+        """
+        if self.winner is None or self.last_move is None:
+            return []
+        move = self.last_move
+        if self._board[move.row][move.col] is not self.winner:
+            return []
+        for d_row, d_col in DIRECTIONS:
+            line = [move]
+            for sign in (1, -1):
+                row, col = move.row + sign * d_row, move.col + sign * d_col
+                while (
+                    0 <= row < self.size
+                    and 0 <= col < self.size
+                    and self._board[row][col] is self.winner
+                ):
+                    line.append(Move(row, col))
+                    row += sign * d_row
+                    col += sign * d_col
+            if len(line) >= WIN_LENGTH:
+                return sorted(line, key=lambda m: (m.row, m.col))
+        return []
+    
     def _count_direction(self, move: Move, d_row: int, d_col: int) -> int:
         """Cuenta fichas consecutivas del mismo jugador desde move en una dirección.
 
