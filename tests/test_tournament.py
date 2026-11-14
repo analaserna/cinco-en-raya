@@ -158,3 +158,14 @@ def test_linea_de_comandos_genera_la_pagina_html(tmp_path):
     contenido = pagina.read_text(encoding="utf-8")
     assert "Clasificación de bots" in contenido
     assert "Táctico" in contenido
+    
+    
+
+
+def test_pagina_html_muestra_medallas_y_porcentaje():
+    result = run_tournament({"A": PrimeraLibre, "B": Falla}, games_per_pair=2)
+    pagina = result.to_html()
+    assert 'class="pos pos-1"' in pagina
+    assert "100 %" in pagina
+    assert "motivo-fallo" in pagina
+    assert 'class="descalif"' in pagina

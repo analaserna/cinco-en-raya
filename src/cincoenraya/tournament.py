@@ -23,26 +23,74 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clasificación de bots - Cinco en raya</title>
 <style>
-body {{ font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }}
-h1 {{ margin-bottom: 0.2rem; }}
-.fecha {{ color: #666; margin-top: 0; }}
-.tabla {{ overflow-x: auto; }}
-table {{ border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; }}
-th, td {{ border-bottom: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }}
-th {{ background: #f4f4f4; }}
-.clasificacion td:nth-child(n+3) {{ text-align: right; }}
+:root {{ --madera: #dcb35c; --marron: #5a4320; --fondo: #faf6ee; --texto: #2b2b2b; --gris: #6b6b6b; --verde: #2e7d32; --rojo: #c62828; }}
+* {{ box-sizing: border-box; }}
+body {{ margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fondo); color: var(--texto); }}
+header {{ background: var(--marron); color: #fff; padding: 2rem 1rem; }}
+header .contenido, main {{ max-width: 960px; margin: 0 auto; }}
+header h1 {{ margin: 0 0 .3rem; font-size: 2rem; }}
+header p {{ margin: .2rem 0; opacity: .9; }}
+nav {{ margin-top: 1rem; display: flex; flex-wrap: wrap; gap: .5rem; }}
+nav a {{ color: var(--marron); background: var(--madera); padding: .4rem .8rem; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: .9rem; }}
+nav a:hover {{ background: #e8c77a; }}
+main {{ padding: 1.5rem 1rem 3rem; }}
+.resumen {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; }}
+.tarjeta {{ background: #fff; border-radius: 10px; padding: 1rem 1.2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }}
+.tarjeta .valor {{ font-size: 1.6rem; font-weight: 700; color: var(--marron); }}
+.tarjeta .etiqueta {{ color: var(--gris); font-size: .9rem; }}
+h2 {{ color: var(--marron); margin: 2rem 0 .8rem; }}
+.explicacion {{ color: var(--gris); font-size: .9rem; margin: 0 0 1rem; }}
+.tabla {{ overflow-x: auto; background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }}
+table {{ border-collapse: collapse; width: 100%; font-size: .95rem; }}
+th, td {{ padding: .6rem .8rem; border-bottom: 1px solid #eee; white-space: nowrap; text-align: left; }}
+th {{ background: #f3ead8; color: var(--marron); font-weight: 600; }}
+tr:last-child td {{ border-bottom: none; }}
+th.num, td.num {{ text-align: right; }}
+th.centro, td.centro {{ text-align: center; }}
+.pos {{ display: inline-flex; align-items: center; justify-content: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: #eee; font-weight: 700; }}
+.pos-1 {{ background: #f2c94c; }}
+.pos-2 {{ background: #c9ced6; }}
+.pos-3 {{ background: #d9a066; }}
+.bot {{ font-weight: 600; }}
+.puntos {{ font-weight: 700; font-size: 1.05rem; }}
+.barra {{ position: relative; display: inline-block; width: 110px; height: .6rem; margin-right: .5rem; background: #eee; border-radius: 999px; overflow: hidden; vertical-align: middle; }}
+.barra span {{ position: absolute; top: 0; bottom: 0; left: 0; background: var(--verde); border-radius: 999px; }}
+.etiqueta-motivo {{ display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }}
+.motivo-ok {{ background: #e3f2e5; color: var(--verde); }}
+.motivo-empate {{ background: #eee; color: var(--gris); }}
+.motivo-fallo {{ background: #fdecea; color: var(--rojo); }}
+.descalif {{ color: var(--rojo); font-weight: 700; }}
+.ganador {{ font-weight: 700; }}
+.detalle {{ color: var(--gris); font-size: .85rem; white-space: normal; min-width: 200px; }}
+footer {{ text-align: center; color: var(--gris); font-size: .85rem; padding: 1rem; }}
 </style>
 </head>
 <body>
+<header>
+<div class="contenido">
 <h1>Clasificación de bots</h1>
+<p>Torneo todos contra todos del proyecto cinco en raya.</p>
 {date_line}
-<p>Torneo todos contra todos entre los bots del proyecto
-<a href="https://github.com/analaserna/cinco-en-raya">cinco-en-raya</a>.
-Cada pareja juega con ambos colores. Victoria: 1 punto; empate: 0,5 puntos.
-La columna "Descalif." cuenta las derrotas por error, tiempo agotado o movimiento ilegal.</p>
+<nav>
+<a href="https://cinco-en-raya-cunef.streamlit.app">Jugar en la web</a>
+<a href="https://cinco-en-raya.readthedocs.io/es/latest/">Documentación</a>
+<a href="https://cinco-en-raya.readthedocs.io/es/latest/tutorial-bot/">Crea tu bot</a>
+<a href="https://github.com/analaserna/cinco-en-raya">Repositorio</a>
+</nav>
+</div>
+</header>
+<main>
+<section class="resumen">
+<div class="tarjeta"><div class="valor">{leader}</div><div class="etiqueta">Líder</div></div>
+<div class="tarjeta"><div class="valor">{n_bots}</div><div class="etiqueta">Bots</div></div>
+<div class="tarjeta"><div class="valor">{n_games}</div><div class="etiqueta">Partidas</div></div>
+<div class="tarjeta"><div class="valor">{n_forfeits}</div><div class="etiqueta">Derrotas por fallo</div></div>
+</section>
+<h2>Clasificación</h2>
+<p class="explicacion">Cada pareja de bots juega con ambos colores. Victoria: 1 punto; empate: 0,5 puntos. La columna "Descalif." cuenta las derrotas por error, tiempo agotado o movimiento ilegal.</p>
 <div class="tabla">
-<table class="clasificacion">
-<thead><tr><th>Pos.</th><th>Bot</th><th>Puntos</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>Descalif.</th></tr></thead>
+<table>
+<thead><tr><th class="centro">Pos.</th><th>Bot</th><th class="num">Puntos</th><th>Victorias</th><th class="num">PJ</th><th class="num">G</th><th class="num">E</th><th class="num">P</th><th class="num">Descalif.</th></tr></thead>
 <tbody>
 {standing_rows}
 </tbody>
@@ -51,12 +99,14 @@ La columna "Descalif." cuenta las derrotas por error, tiempo agotado o movimient
 <h2>Partidas</h2>
 <div class="tabla">
 <table>
-<thead><tr><th>Negras</th><th>Blancas</th><th>Ganador</th><th>Motivo</th><th>Movimientos</th><th>Detalle</th></tr></thead>
+<thead><tr><th>Negras</th><th>Blancas</th><th>Ganador</th><th>Resultado</th><th class="num">Jugadas</th><th>Detalle</th></tr></thead>
 <tbody>
 {game_rows}
 </tbody>
 </table>
 </div>
+</main>
+<footer>Página generada automáticamente con GitHub Actions tras cada cambio en la rama main.</footer>
 </body>
 </html>
 """
@@ -106,24 +156,56 @@ class TournamentResult:
         inyectar código en la página.
         """
         esc = html.escape
-        standing_rows = "\n".join(
-            f"<tr><td>{position}</td><td>{esc(s.name)}</td><td>{s.points:g}</td>"
-            f"<td>{s.played}</td><td>{s.wins}</td><td>{s.draws}</td>"
-            f"<td>{s.losses}</td><td>{s.forfeits}</td></tr>"
-            for position, s in enumerate(self.standings, start=1)
-        )
-        game_rows = "\n".join(
-            f"<tr><td>{esc(g.black)}</td><td>{esc(g.white)}</td>"
-            f"<td>{esc(g.winner_name or 'Sin ganador')}</td><td>{esc(g.reason.value)}</td>"
-            f"<td>{len(g.moves)}</td><td>{esc(g.detail or '')}</td></tr>"
-            for g in self.games
-        )
-        date_line = f'<p class="fecha">Actualizada: {esc(generated_at)}</p>' if generated_at else ""
+
+        standing_rows = []
+        for position, s in enumerate(self.standings, start=1):
+            rate = 100 * s.wins / s.played if s.played else 0
+            pos_class = f"pos pos-{position}" if position <= 3 else "pos"
+            forfeits = f'<span class="descalif">{s.forfeits}</span>' if s.forfeits else "0"
+            standing_rows.append(
+                f'<tr><td class="centro"><span class="{pos_class}">{position}</span></td>'
+                f'<td class="bot">{esc(s.name)}</td>'
+                f'<td class="num puntos">{s.points:g}</td>'
+                f'<td><span class="barra"><span style="width: {rate:.0f}%"></span></span>{rate:.0f} %</td>'
+                f'<td class="num">{s.played}</td><td class="num">{s.wins}</td>'
+                f'<td class="num">{s.draws}</td><td class="num">{s.losses}</td>'
+                f'<td class="num">{forfeits}</td></tr>'
+            )
+
+        game_rows = []
+        for g in self.games:
+            if g.reason is EndReason.WIN:
+                reason_class = "motivo-ok"
+            elif g.reason is EndReason.DRAW:
+                reason_class = "motivo-empate"
+            else:
+                reason_class = "motivo-fallo"
+            black, white = esc(g.black), esc(g.white)
+            if g.winner is Player.BLACK:
+                black = f'<span class="ganador">{black}</span>'
+            elif g.winner is Player.WHITE:
+                white = f'<span class="ganador">{white}</span>'
+            winner = esc(g.winner_name) if g.winner_name else "Sin ganador"
+            game_rows.append(
+                f"<tr><td>{black}</td><td>{white}</td><td>{winner}</td>"
+                f'<td><span class="etiqueta-motivo {reason_class}">{esc(g.reason.value)}</span></td>'
+                f'<td class="num">{len(g.moves)}</td>'
+                f'<td class="detalle">{esc(g.detail or "")}</td></tr>'
+            )
+
+        date_line = f"<p>Actualizada: {esc(generated_at)}</p>" if generated_at else ""
+        leader = esc(self.standings[0].name) if self.standings else "-"
         return HTML_TEMPLATE.format(
             date_line=date_line,
-            standing_rows=standing_rows,
-            game_rows=game_rows,
+            leader=leader,
+            n_bots=len(self.standings),
+            n_games=len(self.games),
+            n_forfeits=sum(s.forfeits for s in self.standings),
+            standing_rows="\n".join(standing_rows),
+            game_rows="\n".join(game_rows),
         )
+
+
 
 
 def bot_name(bot_cls: type) -> str:
