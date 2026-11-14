@@ -17,22 +17,65 @@ DEFAULT_BOT = GreedyBot.name
 
 BOARD_CSS = """
 <style>
-div[data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap;
-    gap: 2px;
+.st-key-tablero {
+    gap: 0;
+    background: #dcb35c;
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 600px;
 }
-div[data-testid="stHorizontalBlock"] > div {
+.st-key-tablero div[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap;
+    gap: 0;
+}
+.st-key-tablero div[data-testid="stHorizontalBlock"] > div {
     min-width: 0;
     flex: 1 1 0;
 }
-div[data-testid="stHorizontalBlock"] button {
-    width: 100%;
+.st-key-tablero div[data-testid="stElementContainer"],
+.st-key-tablero .stButton {
+    width: 100% !important;
+}
+.st-key-tablero button {
+    position: relative;
+    width: 100% !important;
     min-height: 0;
-    padding: 0;
     aspect-ratio: 1;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background:
+        linear-gradient(#6b4f1d, #6b4f1d) center / 1px 100% no-repeat,
+        linear-gradient(#6b4f1d, #6b4f1d) center / 100% 1px no-repeat;
+    color: transparent;
+}
+.st-key-tablero button p {
+    font-size: 0;
+}
+.st-key-tablero button::after {
+    content: "";
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+}
+.st-key-tablero button[data-testid="stBaseButton-primary"]::after {
+    background: radial-gradient(circle at 35% 30%, #666, #000 70%);
+}
+.st-key-tablero button[data-testid="stBaseButton-secondary"]::after {
+    background: radial-gradient(circle at 35% 30%, #fff, #ccc 85%);
+    box-shadow: 0 0 0 1px #8a8a8a;
+}
+.st-key-tablero button[data-testid="stBaseButton-tertiary"]:not(:disabled):hover::after {
+    background: rgba(0, 0, 0, 0.25);
+}
+.st-key-tablero button:disabled {
+    opacity: 1;
+    cursor: default;
 }
 </style>
 """
+
+CELL_TYPES = {None: "tertiary", Player.BLACK: "primary", Player.WHITE: "secondary"}
 
 
 def new_game(keep_bot: bool = False) -> None:
@@ -125,19 +168,33 @@ def render_status(game: GameState) -> None:
 
 
 def render_board(game: GameState) -> None:
-    """Dibuja el tablero como una cuadrícula de botones."""
-    for row in range(game.size):
-        columns = st.columns(game.size, gap="small")
-        for col, column in enumerate(columns):
-            occupant = game.cell(row, col)
-            column.button(
-                SYMBOLS[occupant],
-                key=f"cell-{row}-{col}",
-                on_click=on_cell_click,
-                args=(row, col),
-                disabled=occupant is not None or game.is_over(),
-            )
+    """Dibuja el tablero como una cuadrícula de botones con aspecto de tablero real.
 
+    Cada casilla usa un tipo de botón distinto según su contenido (vacía,
+    negra o blanca), y el CSS dibuja las líneas y las fichas. La última
+    jugada se marca con un punto rojo.
+    """
+    with st.container(key="tablero"):
+        for row in range(game.size):
+            columns = st.columns(game.size, gap="small")
+            for col, column in enumerate(columns):
+                occupant = game.cell(row, col)
+                column.button(
+                    SYMBOLS[occupant],
+                    key=f"cell-{row}-{col}",
+                    type=CELL_TYPES[occupant],
+                    on_click=on_cell_click,
+                    args=(row, col),
+                    disabled=occupant is not None or game.is_over(),
+                )
+    if game.last_move is not None:
+        row, col = game.last_move.row, game.last_move.col
+        st.markdown(
+            f"<style>.st-key-cell-{row}-{col} button::before {{"
+            "content: ''; position: absolute; inset: 40%; border-radius: 50%;"
+            "background: #d62828; z-index: 1; }</style>",
+            unsafe_allow_html=True,
+        )
 
 def render_demo() -> None:
     """Partida de demostración entre dos bots."""
