@@ -82,3 +82,5 @@ class GreedyBot(Bot):
         attack = self._line_length(state, move, me)
         defense = self._line_length(state, move, rival)
         return 2 * attack**2 + defense**2
+        #attack es la linea mas larga que formaria yo si juego ahi(atacar pesa el doble que defender)
+        #la línea más larga que formaría el rival si jugara ahí. Es lo que le quito al ocupar yo esa casilla.
