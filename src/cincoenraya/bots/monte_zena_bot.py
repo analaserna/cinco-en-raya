@@ -101,7 +101,7 @@ class MonteZenaBot(Bot):
 
     name = "monte_zena"
 
-    def __init__(self, max_depth: int = 12, time_limit: float = 0.4, max_branching: int = 8) -> None:
+    def __init__(self, max_depth: int = 12, time_limit: float = 0.4, max_branching: int = 10) -> None:
         self.max_depth = max_depth
         self.time_limit = time_limit
         self.max_branching = max_branching
