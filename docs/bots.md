@@ -1,6 +1,6 @@
 # Bots del proyecto
 
-El proyecto incluye cinco bots, de menor a mayor fuerza. Todos heredan de `Bot` y se descubren automáticamente, por lo que aparecen en la interfaz web, en la validación y en el torneo sin registrarlos en ningún sitio.
+El proyecto incluye seis bots: cinco desarrollados por el equipo y uno externo, recibido por pull request. Van de menor a mayor complejidad. Todos heredan de `Bot` y se descubren automáticamente, por lo que aparecen en la interfaz web, en la validación y en el torneo sin registrarlos en ningún sitio.
 
 | Bot | Clase | Idea principal | Jugadas que mira hacia delante |
 |---|---|---|---|
@@ -9,6 +9,7 @@ El proyecto incluye cinco bots, de menor a mayor fuerza. Todos heredan de `Bot` 
 | Táctico | `GreedyBot` | Gana o bloquea; si no, alarga sus líneas | Una |
 | Patrones | `PatternBot` | Mejor jugada según la evaluación por ventanas | Una |
 | Minimax | `MinimaxBot` | Amenazas forzadas y minimax con poda alfa-beta | Varias, según el tiempo |
+| monte_zena | `MonteZenaBot` | Bot externo: negamax con poda alfa-beta, tabla de transposición y amenazas forzadas | Varias, según el tiempo (hasta 12) |
 
 ## Aleatorio
 
@@ -42,7 +43,7 @@ El bot gana o bloquea si puede y, si no, elige la casilla que más aumenta la ev
 
 ## Minimax
 
-Es el bot más fuerte del proyecto. En cada movimiento sigue este orden:
+Es el bot de búsqueda desarrollado por el equipo. En cada movimiento sigue este orden:
 
 1. **Ganar o bloquear** en una jugada, como los anteriores.
 2. **Victoria por cuatros continuos (VCF).** Busca una secuencia de cuatros, cada uno de los cuales el rival está obligado a tapar, que termine en una doble amenaza imposible de bloquear. Como en cada paso el rival solo tiene una respuesta, puede ver victorias a muchas jugadas de distancia en pocos milisegundos.
@@ -54,6 +55,21 @@ Para responder en menos de un segundo:
 - **Profundidad iterativa:** busca a profundidad 1, 2, 3... hasta agotar medio segundo, y juega la mejor jugada de la última búsqueda completa. Cada iteración explora primero la mejor jugada de la anterior, lo que mejora la poda.
 - **Ordenación y límite de jugadas:** en cada posición ordena las candidatas por la mejora de la evaluación y explora solo las 10 más prometedoras.
 - **Cálculo incremental:** tanto la evaluación como las casillas candidatas se actualizan con cada jugada, sin recalcularlas desde cero.
+## monte_zena
+
+Es un bot externo: lo escribió un compañero de otro equipo y llegó al repositorio mediante pull request (#44 y #45), que se fusionaron en `main`. Pasa la misma validación que los demás. A pesar del nombre, **no usa Monte Carlo**: es un bot de búsqueda como Minimax, y el nombre viene de los nombres de sus autores.
+
+En cada movimiento sigue este orden:
+
+1. **Ganar o tapar:** si puede formar cinco, lo hace; si el rival tiene un cuatro, solo considera las casillas que lo tapan.
+2. **VCF y defensa:** reutiliza la búsqueda de victorias por cuatros continuos y la defensa frente a la del rival (`find_vcf` y `with_turn_passed`, de `threats.py`).
+3. **Negamax con poda alfa-beta y profundidad iterativa**, hasta 12 jugadas o 0,4 segundos por movimiento. Negamax es la forma compacta de escribir minimax en juegos de suma cero: el valor de una posición para un jugador es el opuesto de su valor para el rival.
+
+Para que la poda sea más eficaz añade:
+
+- **Tabla de transposición:** guarda el valor de las posiciones ya analizadas, identificadas con un hash de Zobrist, para no repetir cálculos si se llega a ellas por otro orden de jugadas.
+- **Jugadas killer:** prueba primero las jugadas que ya provocaron una poda a la misma profundidad.
+- **Tablero propio** con hacer y deshacer jugadas, en lugar de copiar el estado, y evaluación por ventanas actualizada de forma incremental (reutiliza `WINDOW_SCORES` de `heuristics.py`).
 
 ## Resultados
 
