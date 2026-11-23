@@ -96,6 +96,7 @@ cinco-en-raya/
 | Táctico | Gana o bloquea en una jugada y, si no, alarga sus líneas. |
 | Patrones | Elige la jugada que más mejora la evaluación por ventanas. |
 | Minimax | Busca victorias por cuatros continuos y usa minimax con poda alfa-beta y profundidad iterativa. |
+| monte_zena | Bot externo (de otro equipo) que busca con negamax, poda alfa-beta, tabla de transposición y profundidad iterativa. |
 
 La explicación detallada de cada bot está en la documentación.
 
